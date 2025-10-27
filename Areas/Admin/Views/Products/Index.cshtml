@@ -1,58 +1,129 @@
 ﻿@model IEnumerable<_22DH114699_LTW.Models.Product>
 
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Danh Sách Sản Phẩm";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Index</h2>
+<div class="container-fluid py-3">
+    <!-- Header + Toolbar -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+        <h2 class="m-0">Danh Sách Sản Phẩm</h2>
+        <div class="d-flex gap-2">
+            @Html.ActionLink("➕ Thêm sản phẩm", "Create", null, new { @class = "btn btn-primary" })
+        </div>
+    </div>
 
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.ProductName)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.ProductDescription)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.ProductPrice)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.ProductImage)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Category.CategoryName)
-        </th>
-        <th></th>
-    </tr>
+    <!-- Alerts -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.ProductName)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.ProductDescription)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.ProductPrice)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.ProductImage)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Category.CategoryName)
-        </td>
-        <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.ProductID }) |
-            @Html.ActionLink("Details", "Details", new { id=item.ProductID }) |
-            @Html.ActionLink("Delete", "Delete", new { id=item.ProductID })
-        </td>
-    </tr>
-}
+    <!-- Search / Filters (GET) -->
+    @using (Html.BeginForm("Index", null, FormMethod.Get, new { @class = "row gy-2 gx-2 align-items-center mb-3" }))
+    {
+        <div class="col-12 col-md-auto">
+            <div class="input-group">
+                <span class="input-group-text">🔎</span>
+                <input type="search" name="q" value="@Request.QueryString["q"]" class="form-control" placeholder="Tìm theo tên hoặc mô tả…" />
+            </div>
+        </div>
+        <div class="col-12 col-md-auto">
+            @* Nếu có danh mục ở ViewBag.Categories (SelectList), bạn có thể dùng DropDownList *@
+            @Html.DropDownList("categoryId", ViewBag.Categories as SelectList ?? new SelectList(Enumerable.Empty<SelectListItem>()),
+                "Tất cả danh mục",
+                new { @class = "form-select" })
+        </div>
+        <div class="col-12 col-md-auto">
+            <button type="submit" class="btn btn-outline-secondary">Lọc</button>
+        </div>
+    }
 
-</table>
+    <!-- Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Hình</th>
+                            <th>@Html.DisplayNameFor(m => m.First().ProductName)</th>
+                            <th class="w-50">@Html.DisplayNameFor(m => m.First().ProductDescription)</th>
+                            <th class="text-end">@Html.DisplayNameFor(m => m.First().ProductPrice)</th>
+                            <th>@Html.DisplayNameFor(m => m.First().Category.CategoryName)</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td style="width:80px;">
+                                        @{
+                                            var imgPath = Url.Content("~/Images/" + (item.ProductImage ?? "no-image.png"));
+                                        }
+                                        <img src="@imgPath"
+                                             alt="@item.ProductName"
+                                             class="img-thumbnail"
+                                             style="width:64px;height:64px;object-fit:cover;border-radius:.5rem;" />
+                                    </td>
+                                    <td class="fw-semibold">@Html.DisplayFor(_ => item.ProductName)</td>
+                                    <td class="text-body-secondary">
+                                        @{
+                                            var desc = item.ProductDescription ?? "";
+                                            var clipped = desc.Length > 140 ? (desc.Substring(0, 140) + "…") : desc;
+                                        }
+                                        @clipped
+                                    </td>
+                                    <td class="text-end">
+                                        @String.Format("{0:N0} ₫", item.ProductPrice)
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">@Html.DisplayFor(_ => item.Category.CategoryName)</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            @Html.ActionLink("Sửa", "Edit", new { id = item.ProductID }, new { @class = "btn btn-outline-primary" })
+                                            @Html.ActionLink("Xem", "Details", new { id = item.ProductID }, new { @class = "btn btn-outline-secondary" })
+                                            @Html.ActionLink("Xóa", "Delete", new { id = item.ProductID }, new { @class = "btn btn-outline-danger" })
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6">
+                                    <div class="text-center text-body-secondary py-4">
+                                        Chưa có sản phẩm nào phù hợp.
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination placeholder (tùy bạn gắn PagedList/MVC Paging) -->
+        <div class="card-footer bg-white d-flex flex-wrap gap-2 justify-content-between align-items-center">
+            <small class="text-body-secondary">Hiển thị @((Model?.Count() ?? 0)) sản phẩm</small>
+            @* TODO: Render pager here *@
+        </div>
+    </div>
+</div>
+

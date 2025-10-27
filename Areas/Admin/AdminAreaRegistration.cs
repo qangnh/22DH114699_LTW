@@ -17,7 +17,8 @@ namespace _22DH114699_LTW.Areas.Admin
             context.MapRoute(
                 "Admin_default",
                 "Admin/{controller}/{action}/{id}",
-                new { action = "Index", id = UrlParameter.Optional }
+                defaults: new { action = "Index", id = UrlParameter.Optional },
+                namespaces: new[] { "_22DH114699_LTW.Areas.Admin.Controllers" }
             );
         }
     }

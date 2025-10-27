@@ -1,34 +1,121 @@
 ﻿@model IEnumerable<_22DH114699_LTW.Models.Category>
 
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Danh mục sản phẩm";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Index</h2>
+<div class="container-fluid py-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+        <h2 class="m-0">Danh mục sản phẩm</h2>
+        @Html.ActionLink("➕ Thêm mới", "Create", null, new { @class = "btn btn-primary" })
+    </div>
 
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.CategoryName)
-        </th>
-        <th></th>
-    </tr>
+    @* Thông báo *@
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.CategoryName)
-        </td>
-        <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.CategoryID }) |
-            @Html.ActionLink("Details", "Details", new { id=item.CategoryID }) |
-            @Html.ActionLink("Delete", "Delete", new { id=item.CategoryID })
-        </td>
-    </tr>
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:56px">#</th>
+                        <th>Tên danh mục</th>
+                        <th class="text-end" style="width:260px">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var index = 1;
+                    }
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td class="fw-semibold">@Html.DisplayFor(_ => item.CategoryName)</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        @Html.ActionLink("Cập nhật", "Edit", new { id = item.CategoryID }, new { @class = "btn btn-outline-primary" })
+                                        @Html.ActionLink("Xem chi tiết", "Details", new { id = item.CategoryID }, new { @class = "btn btn-outline-secondary" })
+                                        <a href="@Url.Action("Delete", new { id=item.CategoryID })"
+                                           class="btn btn-outline-danger"
+                                           data-bs-toggle="modal"
+                                           data-bs-target="#confirmDeleteModal"
+                                           data-delete-url="@Url.Action("Delete", new { id=item.CategoryID })"
+                                           data-name="@item.CategoryName">
+                                            Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-body-secondary py-4">
+                                Chưa có danh mục nào.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <small class="text-body-secondary">Tổng: @(Model?.Count() ?? 0) danh mục</small>
+            @* TODO: chỗ phân trang nếu cần *@
+        </div>
+    </div>
+</div>
+
+@* Modal xác nhận xóa *@
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xác nhận xóa danh mục</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc muốn xóa <strong id="delName">danh mục</strong>? Thao tác không thể hoàn tác.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <a id="btnConfirmDelete" href="#" class="btn btn-danger">Xóa</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+(function() {
+    var modal = document.getElementById('confirmDeleteModal');
+    if (!modal) return;
+
+    modal.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        var url = btn?.getAttribute('data-delete-url');
+        var name = btn?.getAttribute('data-name') || 'danh mục';
+        document.getElementById('delName').textContent = name;
+        document.getElementById('btnConfirmDelete').setAttribute('href', url);
+    });
+})();
+    </script>
 }
-
-</table>

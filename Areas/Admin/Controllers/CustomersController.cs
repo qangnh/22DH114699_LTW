@@ -39,7 +39,7 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
         // GET: Admin/Customers/Create
         public ActionResult Create()
         {
-            ViewBag.Username = new SelectList(db.Users, "Username", "Password");
+            ViewBag.Username = new SelectList(db.Users, "Username", "Username");
             return View();
         }
 
@@ -50,6 +50,11 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "CustomerID,CustomerName,CustomerPhone,CustomerEmail,CustomerAddress,Username")] Customer customer)
         {
+            if (string.IsNullOrWhiteSpace(customer.Username))
+            {
+                ModelState.AddModelError("Username", "Please select a user.");
+            }
+
             if (ModelState.IsValid)
             {
                 db.Customers.Add(customer);
@@ -57,7 +62,7 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Username = new SelectList(db.Users, "Username", "Password", customer.Username);
+            ViewBag.Username = new SelectList(db.Users, "Username", "Username", customer.Username);
             return View(customer);
         }
 
@@ -73,7 +78,7 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
             {
                 return HttpNotFound();
             }
-            ViewBag.Username = new SelectList(db.Users, "Username", "Password", customer.Username);
+            ViewBag.Username = new SelectList(db.Users, "Username", "Username", customer.Username);
             return View(customer);
         }
 
@@ -84,13 +89,18 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "CustomerID,CustomerName,CustomerPhone,CustomerEmail,CustomerAddress,Username")] Customer customer)
         {
+            if (string.IsNullOrWhiteSpace(customer.Username))
+            {
+                ModelState.AddModelError("Username", "Please select a user.");
+            }
+
             if (ModelState.IsValid)
             {
                 db.Entry(customer).State = EntityState.Modified;
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ViewBag.Username = new SelectList(db.Users, "Username", "Password", customer.Username);
+            ViewBag.Username = new SelectList(db.Users, "Username", "Username", customer.Username);
             return View(customer);
         }
 

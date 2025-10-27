@@ -16,7 +16,8 @@ namespace _22DH114699_LTW
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional },
+                new [] { "._22DH114699_LTW.Areas.Admin.Controllers" } 
             );
         }
     }
