@@ -1,4 +1,4 @@
-﻿@model IEnumerable<_22DH114699_LTW.Models.Product>
+﻿@model _22DH114699_LTW.Models.ViewModel.ProductSearchVM
 
 @{
     ViewBag.Title = "Danh Sách Sản Phẩm";
@@ -6,7 +6,6 @@
 }
 
 <div class="container-fluid py-3">
-    <!-- Header + Toolbar -->
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
         <h2 class="m-0">Danh Sách Sản Phẩm</h2>
         <div class="d-flex gap-2">
@@ -14,7 +13,6 @@
         </div>
     </div>
 
-    <!-- Alerts -->
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -30,27 +28,89 @@
         </div>
     }
 
-    <!-- Search / Filters (GET) -->
-    @using (Html.BeginForm("Index", null, FormMethod.Get, new { @class = "row gy-2 gx-2 align-items-center mb-3" }))
+    @using (Html.BeginForm("Index", "Products", FormMethod.Get, new { @class = "row gy-2 gx-2 align-items-center mb-3" }))
     {
-        <div class="col-12 col-md-auto">
-            <div class="input-group">
-                <span class="input-group-text">🔎</span>
-                <input type="search" name="q" value="@Request.QueryString["q"]" class="form-control" placeholder="Tìm theo tên hoặc mô tả…" />
-            </div>
+        <div class="form-group search container">
+            @Html.TextBoxFor(m => m.SearchTerm, new
+            {
+                @class = "form-control",
+                placeholder = "Nhập tên/mô tả"
+            })
+            @Html.TextBoxFor(m => m.MinPrice, new
+            {
+                @class = "form-control",
+                placeholder = "Nhập giá tối thiểu",
+                type = "number",
+                step = "1",
+                min = "0"
+            })
+            @Html.TextBoxFor(m => m.MaxPrice, new
+            {
+                @class = "form-control",
+                placeholder = "Nhập giá tối đa",
+                type = "number",
+                step = "1",
+                min = "0"
+            })
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
         </div>
-        <div class="col-12 col-md-auto">
-            @* Nếu có danh mục ở ViewBag.Categories (SelectList), bạn có thể dùng DropDownList *@
-            @Html.DropDownList("categoryId", ViewBag.Categories as SelectList ?? new SelectList(Enumerable.Empty<SelectListItem>()),
-                "Tất cả danh mục",
-                new { @class = "form-select" })
-        </div>
-        <div class="col-12 col-md-auto">
-            <button type="submit" class="btn btn-outline-secondary">Lọc</button>
+        <div class="form-group order-container">
+            Sắp xếp theo
+            @Html.ActionLink(
+                                    "Tên tăng dần",
+                                    "Index",
+                                    "Products",
+                                    new
+                                    {
+                                        sortOrder = "name_asc",
+                                        SearchTerm = Model?.SearchTerm,
+                                        MinPrice = Model?.MinPrice,
+                                        MaxPrice = Model?.MaxPrice
+                                    },
+                                    null
+                                )
+            @Html.ActionLink(
+                        "Tên giảm dần",
+                        "Index",
+                        "Products",
+                        new
+                        {
+                            sortOrder = "name_desc",
+                            SearchTerm = Model?.SearchTerm,
+                            MinPrice = Model?.MinPrice,
+                            MaxPrice = Model?.MaxPrice
+                        },
+                        null
+                    )
+            @Html.ActionLink(
+                   "Giá tăng dần",
+                   "Index",
+                   "Products",
+                   new
+                   {
+                       sortOrder = "price_asc",
+                       SearchTerm = Model?.SearchTerm,
+                       MinPrice = Model?.MinPrice,
+                       MaxPrice = Model?.MaxPrice
+                   },
+                   null
+               )
+            @Html.ActionLink(
+                   "Giá giảm dần",
+                   "Index",
+                   "Products",
+                   new
+                   {
+                       sortOrder = "price_desc",
+                       SearchTerm = Model?.SearchTerm,
+                       MinPrice = Model?.MinPrice,
+                       MaxPrice = Model?.MaxPrice
+                   },
+                   null
+               )
         </div>
     }
 
-    <!-- Table -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -58,17 +118,17 @@
                     <thead class="table-light">
                         <tr>
                             <th>Hình</th>
-                            <th>@Html.DisplayNameFor(m => m.First().ProductName)</th>
-                            <th class="w-50">@Html.DisplayNameFor(m => m.First().ProductDescription)</th>
-                            <th class="text-end">@Html.DisplayNameFor(m => m.First().ProductPrice)</th>
-                            <th>@Html.DisplayNameFor(m => m.First().Category.CategoryName)</th>
+                            <th>@Html.DisplayNameFor(m => m.Products.First().ProductName)</th>
+                            <th class="w-50">@Html.DisplayNameFor(m => m.Products.First().ProductDescription)</th>
+                            <th class="text-end">@Html.DisplayNameFor(m => m.Products.First().ProductPrice)</th>
+                            <th>@Html.DisplayNameFor(m => m.Products.First().Category.CategoryName)</th>
                             <th class="text-end">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model != null && Model.Any())
+                        @if (Model?.Products != null && Model.Products.Any())
                         {
-                            foreach (var item in Model)
+                            foreach (var item in Model.Products)
                             {
                                 <tr>
                                     <td style="width:80px;">
@@ -119,11 +179,8 @@
             </div>
         </div>
 
-        <!-- Pagination placeholder (tùy bạn gắn PagedList/MVC Paging) -->
         <div class="card-footer bg-white d-flex flex-wrap gap-2 justify-content-between align-items-center">
-            <small class="text-body-secondary">Hiển thị @((Model?.Count() ?? 0)) sản phẩm</small>
-            @* TODO: Render pager here *@
+            <small class="text-body-secondary">Hiển thị @((Model?.Products?.Count() ?? 0)) sản phẩm</small>
         </div>
     </div>
 </div>
-

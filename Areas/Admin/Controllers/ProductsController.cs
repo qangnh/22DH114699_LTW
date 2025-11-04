@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
+using PagedList;
 using _22DH114699_LTW.Models;
+using _22DH114699_LTW.Models.ViewModel;
+using System.Web.Configuration;
 
 namespace _22DH114699_LTW.Areas.Admin.Controllers
 {
@@ -15,10 +19,53 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
         private MyStoreEntities db = new MyStoreEntities();
 
         // GET: Admin/Products
-        public ActionResult Index()
+        public ActionResult Index(ProductSearchVM vm, string sortOrder, int? page)
         {
-            var products = db.Products.Include(p => p.Category);
-            return View(products.ToList());
+            var products = db.Products.Include(p => p.Category).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(vm?.SearchTerm))
+            {
+                var term = vm.SearchTerm.Trim();
+                products = products.Where(p =>
+                    p.ProductName.Contains(term) ||
+                    p.ProductDescription.Contains(term) ||
+                    p.Category.CategoryName.Contains(term));
+            }
+
+            if (vm?.MinPrice != null)
+            {
+                products = products.Where(p => p.ProductPrice >= vm.MinPrice.Value);
+            }
+
+            if (vm?.MaxPrice != null)
+            {
+                products = products.Where(p => p.ProductPrice <= vm.MaxPrice.Value);
+            }
+
+            switch (sortOrder)
+            {
+                case "price_asc":
+                    products = products.OrderBy(p => p.ProductPrice);
+                    break;
+                case "price_desc":
+                    products = products.OrderByDescending(p => p.ProductPrice);
+                    break;
+                case "name_asc":
+                    products = products.OrderBy(p => p.ProductName);
+                    break;
+                case "name_desc":
+                    products = products.OrderByDescending(p => p.ProductName);
+                    break;
+                default:
+                    products = products.OrderBy(p => p.ProductID);
+                    break;
+            }
+
+            vm = vm ?? new ProductSearchVM();
+            int pageNumber=page ?? 1;
+            int pageSize = 2;
+            vm .Products = products.ToPagedList(pageNumber, pageSize);
+            return View(vm);
         }
 
         // GET: Admin/Products/Details/5
