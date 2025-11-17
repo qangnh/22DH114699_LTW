@@ -70,7 +70,7 @@ namespace _22DH114699_LTW.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Checkout(string addressDelivery, string paymentMethod)
+        public ActionResult Checkout(string addressDelivery, string paymentMethod, string shippingMethod)
         {
             try
             {
@@ -108,12 +108,23 @@ namespace _22DH114699_LTW.Controllers
                     return RedirectToAction("Index", "Cart");
                 }
 
+                // Tính phí v?n chuy?n d?a trên ph??ng th?c giao hàng
+                decimal shippingFee = 0;
+                if (shippingMethod == "Express")
+                {
+                    shippingFee = 30000; // Giao hàng nhanh: 30,000?
+                }
+                else if (shippingMethod == "Standard")
+                {
+                    shippingFee = 15000; // Giao hàng ti?t ki?m: 15,000?
+                }
+
                 // T?o ??n hàng
                 var order = new Order
                 {
                     CustomerID = customer.CustomerID,
                     OrderDate = DateTime.Now,
-                    TotalAmount = cartService.GetTotalAmount(),
+                    TotalAmount = cartService.GetTotalAmount() + shippingFee,
                     PaymentStatus = paymentMethod ?? "COD", // Cash On Delivery m?c ??nh
                     AddressDelivery = addressDelivery
                 };
@@ -140,6 +151,8 @@ namespace _22DH114699_LTW.Controllers
                 cartService.ClearCart();
 
                 TempData["Success"] = "??t hàng thành công!";
+                TempData["ShippingMethod"] = shippingMethod == "Express" ? "Giao hàng nhanh" : "Giao hàng ti?t ki?m";
+                TempData["ShippingFee"] = shippingFee;
                 return RedirectToAction("OrderSuccess", new { id = order.OrderID });
             }
             catch (Exception ex)
