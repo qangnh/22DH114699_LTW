@@ -1,0 +1,130 @@
+﻿@{
+    var topDeals = ViewBag.TopDeals as List<dynamic>;
+}
+
+@if (topDeals != null && topDeals.Any())
+{
+    <div id="topDealsCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            @{
+                var productsPerPage = 3;
+                var totalPages = (int)Math.Ceiling((double)topDeals.Count / productsPerPage);
+                
+                for (int pageIndex = 0; pageIndex < totalPages; pageIndex++)
+                {
+                    var productsInPage = topDeals.Skip(pageIndex * productsPerPage).Take(productsPerPage).ToList();
+                    var isActive = pageIndex == 0 ? "active" : "";
+                    
+                    <div class="carousel-item @isActive">
+                        <div class="row row-cols-1 row-cols-md-3 g-4">
+                            @foreach (var item in productsInPage)
+                            {
+                                var product = item.Product as _22DH114699_LTW.Models.Product;
+                                var totalSold = item.TotalSold;
+                                
+                                string imgPath;
+                                if (string.IsNullOrEmpty(product.ProductImage))
+                                {
+                                    imgPath = Url.Content("~/Images/no-image.png");
+                                }
+                                else if (product.ProductImage.StartsWith("http://") || product.ProductImage.StartsWith("https://"))
+                                {
+                                    imgPath = product.ProductImage;
+                                }
+                                else if (product.ProductImage.StartsWith("~") || product.ProductImage.StartsWith("/"))
+                                {
+                                    imgPath = Url.Content(product.ProductImage);
+                                }
+                                else
+                                {
+                                    imgPath = Url.Content("~/Images/" + product.ProductImage);
+                                }
+                                
+                                <div class="col">
+                                    <div class="card h-100 border shadow-sm top-deal-card">
+                                        <div class="position-relative">
+                                            <span class="badge bg-danger position-absolute top-0 start-0 m-2" style="z-index: 1;">
+                                                <i class="bi bi-fire"></i> Hot
+                                            </span>
+                                            <img class="card-img-top" src="@imgPath" alt="@product.ProductName" style="height: 250px; object-fit: cover;" />
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title" style="height: 3rem; overflow: hidden; line-height: 1.5rem;">
+                                                @product.ProductName
+                                            </h5>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <div class="text-primary fw-bold" style="font-size: 1.25rem;">
+                                                    @String.Format("{0:N0} ?", product.ProductPrice)
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-tag"></i> @(product.Category != null ? product.Category.CategoryName : "Ch?a ph�n lo?i")
+                                                </small>
+                                            </div>
+                                            <div class="mb-3">
+                                                <small class="text-success fw-bold">
+                                                    <i class="bi bi-graph-up-arrow"></i> ?� b�n: @totalSold
+                                                </small>
+                                            </div>
+                                            <div class="progress mb-3" style="height: 8px;">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: @(Math.Min(100, totalSold * 10))%"></div>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-white border-0 p-3 pt-0">
+                                            <a class="btn btn-danger w-100" href="@Url.Action("ProductDetail", "Home", new { id = product.ProductID })">
+                                                <i class="bi bi-cart-plus"></i> Xem chi ti?t
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+        
+        @if (totalPages > 1)
+        {
+            <button class="carousel-control-prev" type="button" data-bs-target="#topDealsCarousel" data-bs-slide="prev" style="width: 5%; margin-left: -50px;">
+                <span class="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#topDealsCarousel" data-bs-slide="next" style="width: 5%; margin-right: -50px;">
+                <span class="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+            
+            <div class="carousel-indicators position-relative mt-3" style="margin-bottom: 0;">
+                @for (int i = 0; i < totalPages; i++)
+                {
+                    var activeClass = i == 0 ? "active" : "";
+                    <button type="button" data-bs-target="#topDealsCarousel" data-bs-slide-to="@i" class="@activeClass bg-dark" aria-label="Page @(i + 1)"></button>
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Ch?a c� s?n ph?m b�n ch?y
+    </div>
+}
+
+<style>
+    .top-deal-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .top-deal-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
+    }
+    
+    .top-deal-card .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+</style>

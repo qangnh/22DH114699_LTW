@@ -1,0 +1,180 @@
+﻿@{
+    ViewBag.Title = "Thanh Toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var customer = ViewBag.Customer as _22DH114699_LTW.Models.Customer;
+    var cart = ViewBag.Cart as List<_22DH114699_LTW.Services.CartItem>;
+    var totalAmount = (decimal)ViewBag.TotalAmount;
+}
+
+<div class="container py-5">
+    <h2 class="mb-4">Thanh Toán</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Thông tin đơn hàng -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-cart-check"></i> Thông Tin Đơn Hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Hình ảnh</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in cart)
+                                {
+                                    <tr>
+                                        <td>@item.ProductName</td>
+                                        <td>
+                                            @{
+                                                string imgPath;
+                                                if (string.IsNullOrEmpty(item.Image))
+                                                {
+                                                    imgPath = Url.Content("~/Images/no-image.png");
+                                                }
+                                                else if (item.Image.StartsWith("http://") || item.Image.StartsWith("https://"))
+                                                {
+                                                    imgPath = item.Image;
+                                                }
+                                                else if (item.Image.StartsWith("~") || item.Image.StartsWith("/"))
+                                                {
+                                                    imgPath = Url.Content(item.Image);
+                                                }
+                                                else
+                                                {
+                                                    imgPath = Url.Content("~/Images/" + item.Image);
+                                                }
+                                            }
+                                            <img src="@imgPath" alt="@item.ProductName" style="width: 60px; height: 60px; object-fit: cover;" />
+                                        </td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">@String.Format("{0:N0}", item.UnitPrice) đ</td>
+                                        <td class="text-end fw-bold">@String.Format("{0:N0}", item.TotalPrice) đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form thông tin giao hàng -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-truck"></i> Thông Tin Giao Hàng</h5>
+                </div>
+                <div class="card-body">
+                    @using (Html.BeginForm("Checkout", "Order", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Họ và tên</label>
+                            <input type="text" class="form-control" value="@customer.CustomerName" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" class="form-control" value="@customer.CustomerPhone" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="text" class="form-control" value="@customer.CustomerEmail" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="addressDelivery" class="form-label">Địa chỉ giao hàng <span class="text-danger">*</span></label>
+                            <textarea id="addressDelivery" name="addressDelivery" class="form-control" rows="3" required placeholder="Nhập địa chỉ giao hàng đầy đủ...">@customer.CustomerAddress</textarea>
+                            <div class="invalid-feedback">
+                                Vui lòng nhập địa chỉ giao hàng.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phương thức thanh toán</label>
+                            <select name="paymentMethod" class="form-select">
+                                <option value="COD" selected>Thanh toán khi nhận hàng (COD)</option>
+                                <option value="Banking">Chuyển khoản ngân hàng</option>
+                                <option value="Card">Thẻ tín dụng/ghi nợ</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Xác Nhận Đặt Hàng
+                            </button>
+                            <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Quay Lại Giỏ Hàng
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Tóm tắt đơn hàng -->
+        <div class="col-md-4">
+            <div class="card position-sticky" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Tóm Tắt Đơn Hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tạm tính:</span>
+                        <span>@String.Format("{0:N0}", totalAmount) đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Phí vận chuyển:</span>
+                        <span class="text-success">Miễn phí</span>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Tổng cộng:</strong>
+                        <strong class="text-danger fs-4">@String.Format("{0:N0}", totalAmount) đ</strong>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Vui lòng kiểm tra kỹ thông tin trước khi đặt hàng
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Bootstrap validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+}

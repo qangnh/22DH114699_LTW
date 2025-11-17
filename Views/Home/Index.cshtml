@@ -1,33 +1,202 @@
-﻿@{
-    ViewBag.Title = "Home Page";
+﻿@using PagedList.Mvc
+@{
+    ViewBag.Title = "Trang chủ";
 }
 
-<main>
-    <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="title">ASP.NET</h1>
-        <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-        <p><a href="https://asp.net" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
+<!-- Top Banner -->
+<div class="bg-success text-white text-center py-2">
+    <small>Free ship đơn từ 400k, giảm nhiều hơn cùng <strong>FREESHIP XTRA</strong></small>
+</div>
+
+<!-- Hero Banner -->
+<div class="hero-banner position-relative mb-4" style="height: 400px; background: url('/Images/banner-bg.jpg') center/cover; background-color: #f0f0f0;">
+    <div class="overlay position-absolute w-100 h-100" style="background: rgba(0,0,0,0.4);"></div>
+    <div class="container position-relative h-100 d-flex flex-column justify-content-center align-items-center text-white text-center" style="z-index: 1;">
+        <h1 class="display-4 fw-bold mb-3">Chào mừng đến trang web eCommerce</h1>
+        <p class="lead mb-4">Mang đến trực tuyến mọi nhu cầu sản phẩm với giá cả cạnh tranh</p>
+        <a href="@Url.Action("ProductList", "Home")" class="btn btn-warning btn-lg px-5">Xem sản phẩm</a>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Search Section -->
+    <div class="search-section mb-5">
+        <h3 class="text-center text-danger mb-4">Tìm kiếm sản phẩm</h3>
+        <div class="d-flex justify-content-center">
+            @using (Html.BeginForm("Index", "Home", FormMethod.Get, new { @class = "d-flex align-items-center", style = "gap: 10px;" }))
+            {
+                <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" class="form-control form-control-lg" placeholder="Nhập tên, mô tả sản phẩm..." style="width: 400px;" />
+                <button type="submit" class="btn btn-danger btn-lg">Tìm kiếm</button>
+            }
+        </div>
+    </div>
+
+    <!-- Featured Products -->
+    <section class="mb-5">
+        <h3 class="text-center text-danger mb-4">Sản phẩm nổi bật</h3>
+        <div class="row row-cols-2 row-cols-md-6 g-3">
+            @{
+                var topProductsPaged = ViewBag.TopProductsPaged as PagedList.IPagedList<_22DH114699_LTW.Models.Product>;
+            }
+            @if (topProductsPaged != null && topProductsPaged.Any())
+            {
+                foreach (var p in topProductsPaged)
+                {
+                    string imgPath;
+                    if (string.IsNullOrEmpty(p.ProductImage))
+                    {
+                        imgPath = Url.Content("~/Images/no-image.png");
+                    }
+                    else if (p.ProductImage.StartsWith("http://") || p.ProductImage.StartsWith("https://"))
+                    {
+                        imgPath = p.ProductImage;
+                    }
+                    else if (p.ProductImage.StartsWith("~") || p.ProductImage.StartsWith("/"))
+                    {
+                        imgPath = Url.Content(p.ProductImage);
+                    }
+                    else
+                    {
+                        imgPath = Url.Content("~/Images/" + p.ProductImage);
+                    }
+                    
+                    <div class="col">
+                        <div class="card h-100 border shadow-sm">
+                            <img class="card-img-top" src="@imgPath" alt="@p.ProductName" style="height: 200px; object-fit: cover;" />
+                            <div class="card-body p-3">
+                                <div class="text-primary fw-bold mb-2" style="font-size: 1.1rem;">@String.Format("{0:N0} ₫", p.ProductPrice)</div>
+                                <h6 class="card-title mb-2" style="font-size: 0.85rem; line-height: 1.3; height: 2.6rem; overflow: hidden;">
+                                    @p.ProductName
+                                </h6>
+                                <div class="text-muted small mb-1">
+                                    @(p.Category != null ? p.Category.CategoryName : "Chưa phân loại")
+                                </div>
+                                <div class="text-muted small">Đã bán: 0</div>
+                            </div>
+                            <div class="card-footer bg-white border-0 p-2 pt-0">
+                                <a class="btn btn-sm btn-outline-primary w-100" href="@Url.Action("ProductDetail", "Home", new { id = p.ProductID })">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="alert alert-info text-center">Không có sản phẩm nổi bật</div>
+                </div>
+            }
+        </div>
+        
+        @if (topProductsPaged != null && topProductsPaged.PageCount > 1)
+        {
+            <div class="mt-4 d-flex justify-content-center">
+                @Html.PagedListPager(topProductsPaged, featuredPage => Url.Action("Index", new { featuredPage, searchTerm = ViewBag.SearchTerm, categoryId = ViewBag.CategoryId }))
+            </div>
+        }
     </section>
 
-    <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-            <h2 id="gettingStartedTitle">Getting started</h2>
-            <p>
-                ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-                enables a clean separation of concerns and gives you full control over markup
-                for enjoyable, agile development.
-            </p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="librariesTitle">
-            <h2 id="librariesTitle">Get more libraries</h2>
-            <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="hostingTitle">
-            <h2 id="hostingTitle">Web Hosting</h2>
-            <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-        </section>
+    <!-- New Products -->
+    <section class="mb-5">
+        <h3 class="text-center text-danger mb-4">Sản phẩm mới</h3>
+        <div class="row row-cols-2 row-cols-md-6 g-3">
+            @{
+                var newProductsPaged = ViewBag.NewProductsPaged as PagedList.IPagedList<_22DH114699_LTW.Models.Product>;
+            }
+            @if (newProductsPaged != null && newProductsPaged.Any())
+            {
+                foreach (var p in newProductsPaged)
+                {
+                    string imgPath;
+                    if (string.IsNullOrEmpty(p.ProductImage))
+                    {
+                        imgPath = Url.Content("~/Images/no-image.png");
+                    }
+                    else if (p.ProductImage.StartsWith("http://") || p.ProductImage.StartsWith("https://"))
+                    {
+                        imgPath = p.ProductImage;
+                    }
+                    else if (p.ProductImage.StartsWith("~") || p.ProductImage.StartsWith("/"))
+                    {
+                        imgPath = Url.Content(p.ProductImage);
+                    }
+                    else
+                    {
+                        imgPath = Url.Content("~/Images/" + p.ProductImage);
+                    }
+                    
+                    <div class="col">
+                        <div class="card h-100 border shadow-sm">
+                            <img class="card-img-top" src="@imgPath" alt="@p.ProductName" style="height: 200px; object-fit: cover;" />
+                            <div class="card-body p-3">
+                                <div class="text-primary fw-bold mb-2" style="font-size: 1.1rem;">@String.Format("{0:N0} ₫", p.ProductPrice)</div>
+                                <h6 class="card-title mb-2" style="font-size: 0.85rem; line-height: 1.3; height: 2.6rem; overflow: hidden;">
+                                    @p.ProductName
+                                </h6>
+                                <div class="text-muted small mb-1">
+                                    @(p.Category != null ? p.Category.CategoryName : "Chưa phân loại")
+                                </div>
+                                <div class="text-muted small">Đã bán: 0</div>
+                            </div>
+                            <div class="card-footer bg-white border-0 p-2 pt-0">
+                                <a class="btn btn-sm btn-outline-primary w-100" href="@Url.Action("ProductDetail", "Home", new { id = p.ProductID })">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="alert alert-info text-center">Không có sản phẩm mới</div>
+                </div>
+            }
+        </div>
+        
+        @if (newProductsPaged != null && newProductsPaged.PageCount > 1)
+        {
+            <div class="mt-4 d-flex justify-content-center">
+                @Html.PagedListPager(newProductsPaged, newPage => Url.Action("Index", new { newPage, searchTerm = ViewBag.SearchTerm, categoryId = ViewBag.CategoryId }))
+            </div>
+        }
+    </section>
+</div>
+
+<!-- Footer -->
+<footer class="bg-light py-3 mt-5 border-top">
+    <div class="container text-center text-muted">
+        <small>© @DateTime.Now.Year - Tên ứng dụng. Liên hệ hỗ trợ: support@example.com</small>
     </div>
-</main>
+</footer>
+
+<style>
+    .hero-banner .overlay {
+        z-index: 0;
+    }
+    body {
+        padding-bottom: 0;
+    }
+    /* Style cho PagedList mặc định */
+    .pagination {
+        display: flex;
+        padding-left: 0;
+        list-style: none;
+    }
+    .pagination li {
+        margin: 0 2px;
+    }
+    .pagination a, .pagination span {
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #dee2e6;
+        text-decoration: none;
+        color: #0d6efd;
+    }
+    .pagination .active span {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+    .pagination a:hover {
+        background-color: #e9ecef;
+    }
+</style>

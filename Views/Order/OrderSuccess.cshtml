@@ -1,0 +1,131 @@
+﻿@model _22DH114699_LTW.Models.Order
+
+@{
+    ViewBag.Title = "Đặt Hàng Thành Công";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Success message -->
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 80px;"></i>
+                </div>
+                <h2 class="text-success">Đặt Hàng Thành Công!</h2>
+                <p class="text-muted">Cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đang được xử lý.</p>
+            </div>
+
+            <!-- Order details card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Thông Tin Đơn Hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Mã đơn hàng:</strong> <span class="text-primary">#@Model.OrderID</span></p>
+                            <p><strong>Ngày đặt hàng:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                            <p><strong>Trạng thái:</strong> <span class="badge bg-warning">Đang xử lý</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Khách hàng:</strong> @Model.Customer.CustomerName</p>
+                            <p><strong>Số điện thoại:</strong> @Model.Customer.CustomerPhone</p>
+                            <p><strong>Phương thức thanh toán:</strong> @Model.PaymentStatus</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <p><strong>Địa chỉ giao hàng:</strong></p>
+                        <p class="text-muted">@Model.AddressDelivery</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order items -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-box-seam"></i> Chi Tiết Sản Phẩm</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Hình ảnh</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderDetails)
+                                {
+                                    <tr>
+                                        <td>@item.Product.ProductName</td>
+                                        <td>
+                                            @{
+                                                string imgPath;
+                                                if (string.IsNullOrEmpty(item.Product.ProductImage))
+                                                {
+                                                    imgPath = Url.Content("~/Images/no-image.png");
+                                                }
+                                                else if (item.Product.ProductImage.StartsWith("http://") || item.Product.ProductImage.StartsWith("https://"))
+                                                {
+                                                    imgPath = item.Product.ProductImage;
+                                                }
+                                                else if (item.Product.ProductImage.StartsWith("~") || item.Product.ProductImage.StartsWith("/"))
+                                                {
+                                                    imgPath = Url.Content(item.Product.ProductImage);
+                                                }
+                                                else
+                                                {
+                                                    imgPath = Url.Content("~/Images/" + item.Product.ProductImage);
+                                                }
+                                            }
+                                            <img src="@imgPath" alt="@item.Product.ProductName" style="width: 60px; height: 60px; object-fit: cover;" />
+                                        </td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">@String.Format("{0:N0}", item.UnitPrice) đ</td>
+                                        <td class="text-end fw-bold">@String.Format("{0:N0}", item.UnitPrice * item.Quantity) đ</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Tổng cộng:</strong></td>
+                                    <td class="text-end"><strong class="text-danger fs-5">@String.Format("{0:N0}", Model.TotalAmount) đ</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional information -->
+            <div class="card mb-4">
+                <div class="card-body bg-light">
+                    <h6 class="mb-3"><i class="bi bi-info-circle"></i> Thông Tin Thêm</h6>
+                    <ul class="mb-0">
+                        <li>Đơn hàng của bạn sẽ được xử lý trong vòng 24 giờ làm việc.</li>
+                        <li>Chúng tôi sẽ gọi điện xác nhận đơn hàng trước khi giao hàng.</li>
+                        <li>Thời gian giao hàng dự kiến: 2-5 ngày làm việc.</li>
+                        <li>Bạn có thể theo dõi đơn hàng trong mục "Đơn hàng của tôi".</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="text-center">
+                <a href="@Url.Action("MyOrder", "Order")" class="btn btn-primary btn-lg me-2">
+                    <i class="bi bi-list-ul"></i> Xem Đơn Hàng Của Tôi
+                </a>
+                <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-house"></i> Về Trang Chủ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

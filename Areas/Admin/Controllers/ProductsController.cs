@@ -1,4 +1,4 @@
-﻿    using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -62,9 +62,9 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
             }
 
             vm = vm ?? new ProductSearchVM();
-            int pageNumber=page ?? 1;
-            int pageSize = 2;
-            vm .Products = products.ToPagedList(pageNumber, pageSize);
+            int pageNumber = page ?? 1;
+            int pageSize = 10;
+            vm.Products = products.ToPagedList(pageNumber, pageSize);
             return View(vm);
         }
 
@@ -91,17 +91,42 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
         }
 
         // POST: Admin/Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ProductID,CategoryID,ProductName,ProductDescription,ProductPrice,ProductImage")] Product product)
+        public ActionResult Create([Bind(Include = "CategoryID,ProductName,ProductDescription,ProductPrice,ProductImage")] Product product)
         {
-            if (ModelState.IsValid)
+            try
             {
-                db.Products.Add(product);
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                // Loại bỏ validation cho ProductID vì nó auto-increment
+                ModelState.Remove("ProductID");
+
+                if (ModelState.IsValid)
+                {
+                    // Nếu không nhập ảnh, set default
+                    if (string.IsNullOrWhiteSpace(product.ProductImage))
+                    {
+                        product.ProductImage = "no-image.png";
+                    }
+
+                    db.Products.Add(product);
+                    db.SaveChanges();
+                    TempData["Success"] = "Thêm sản phẩm thành công!";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    // Debug: Hiển thị lỗi validation
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    TempData["Error"] = "Lỗi validation: " + string.Join(", ", errors);
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi khi lưu: " + ex.Message;
+                if (ex.InnerException != null)
+                {
+                    TempData["Error"] += " | Inner: " + ex.InnerException.Message;
+                }
             }
 
             ViewBag.CategoryID = new SelectList(db.Categories, "CategoryID", "CategoryName", product.CategoryID);
@@ -125,18 +150,25 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
         }
 
         // POST: Admin/Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "ProductID,CategoryID,ProductName,ProductDescription,ProductPrice,ProductImage")] Product product)
         {
-            if (ModelState.IsValid)
+            try
             {
-                db.Entry(product).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                if (ModelState.IsValid)
+                {
+                    db.Entry(product).State = EntityState.Modified;
+                    db.SaveChanges();
+                    TempData["Success"] = "Cập nhật sản phẩm thành công!";
+                    return RedirectToAction("Index");
+                }
             }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi khi cập nhật: " + ex.Message;
+            }
+
             ViewBag.CategoryID = new SelectList(db.Categories, "CategoryID", "CategoryName", product.CategoryID);
             return View(product);
         }
@@ -161,9 +193,17 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Product product = db.Products.Find(id);
-            db.Products.Remove(product);
-            db.SaveChanges();
+            try
+            {
+                Product product = db.Products.Find(id);
+                db.Products.Remove(product);
+                db.SaveChanges();
+                TempData["Success"] = "Xóa sản phẩm thành công!";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi khi xóa: " + ex.Message;
+            }
             return RedirectToAction("Index");
         }
 

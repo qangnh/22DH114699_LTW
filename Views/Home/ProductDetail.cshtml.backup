@@ -1,0 +1,240 @@
+﻿@model _22DH114699_LTW.Models.Product
+@{
+    ViewBag.Title = Model.ProductName;
+    var soldQuantity = ViewBag.SoldQuantity ?? 0;
+    
+    // Xử lý đường dẫn hình ảnh
+    string imgPath;
+    if (string.IsNullOrEmpty(Model.ProductImage))
+    {
+        imgPath = Url.Content("~/Images/no-image.png");
+    }
+    else if (Model.ProductImage.StartsWith("http://") || Model.ProductImage.StartsWith("https://"))
+    {
+        imgPath = Model.ProductImage;
+    }
+    else if (Model.ProductImage.StartsWith("~") || Model.ProductImage.StartsWith("/"))
+    {
+        imgPath = Url.Content(Model.ProductImage);
+    }
+    else
+    {
+        imgPath = Url.Content("~/Images/" + Model.ProductImage);
+    }
+}
+
+<div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">@Html.ActionLink("Trang chủ", "Index", "Home")</li>
+            <li class="breadcrumb-item">@Html.ActionLink("Sản phẩm", "ProductList", "Home")</li>
+            @if (Model.Category != null)
+            {
+                <li class="breadcrumb-item">@Html.ActionLink(Model.Category.CategoryName, "ProductList", "Home", new { categoryId = Model.CategoryID }, null)</li>
+            }
+            <li class="breadcrumb-item active" aria-current="page">@Model.ProductName</li>
+        </ol>
+    </nav>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Thông tin sản phẩm chính -->
+    <div class="row mb-5">
+        <div class="col-md-5">
+            <div class="product-image-container border rounded p-3 bg-white shadow-sm">
+                <img src="@imgPath" alt="@Model.ProductName" class="img-fluid rounded" style="width: 100%; max-height: 500px; object-fit: contain;" />
+            </div>
+        </div>
+        
+        <div class="col-md-7">
+            <div class="product-info">
+                <h2 class="product-title mb-3">@Model.ProductName</h2>
+                
+                <!-- Đánh giá và số lượng bán -->
+                <div class="d-flex align-items-center mb-3">
+                    <div class="rating me-3">
+                        <span class="text-warning">★★★★★</span>
+                        <small class="text-muted">(0 đánh giá)</small>
+                    </div>
+                    <div class="sold-count">
+                        <span class="text-muted">Đã bán: <strong>@soldQuantity</strong></span>
+                    </div>
+                </div>
+
+                <!-- Giá sản phẩm -->
+                <div class="price-section bg-light p-3 rounded mb-4">
+                    <h3 class="text-danger mb-0" style="font-size: 2rem;">
+                        @String.Format("{0:N0} ₫", Model.ProductPrice)
+                    </h3>
+                </div>
+
+                <!-- Thông tin danh mục -->
+                @if (Model.Category != null)
+                {
+                    <div class="mb-3">
+                        <strong>Danh mục:</strong> 
+                        <span class="badge bg-primary">@Model.Category.CategoryName</span>
+                    </div>
+                }
+
+                <!-- Mô tả sản phẩm -->
+                <div class="product-description mb-4">
+                    <h5>Mô tả sản phẩm:</h5>
+                    <p class="text-muted">
+                        @if (!string.IsNullOrEmpty(Model.ProductDescription))
+                        {
+                            @Model.ProductDescription
+                        }
+                        else
+                        {
+                            <text>Chưa có mô tả cho sản phẩm này.</text>
+                        }
+                    </p>
+                </div>
+
+                <!-- Form chọn số lượng và thêm vào giỏ -->
+                <div class="purchase-section border-top pt-4">
+                    @using (Html.BeginForm("ProductDetail", "Home", FormMethod.Post, new { @class = "d-flex flex-column gap-3" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("id", Model.ProductID)
+                        
+                        <div class="quantity-selector">
+                            <label class="form-label"><strong>Số lượng:</strong></label>
+                            <div class="input-group" style="max-width: 150px;">
+                                <button type="button" class="btn btn-outline-secondary" onclick="decreaseQuantity()">-</button>
+                                <input type="number" id="quantity" name="quantity" value="1" min="1" max="999" class="form-control text-center" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="increaseQuantity()">+</button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" name="submit" value="cart" class="btn btn-outline-danger btn-lg flex-grow-1">
+                                <i class="bi bi-cart-plus"></i> Thêm vào giỏ hàng
+                            </button>
+                            <button type="submit" name="submit" value="order" class="btn btn-danger btn-lg flex-grow-1">
+                                <i class="bi bi-bag-check"></i> Mua ngay
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <!-- Chính sách -->
+                <div class="policies mt-4">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="policy-item border rounded p-2 text-center">
+                                <i class="bi bi-truck text-primary"></i>
+                                <small class="d-block">Miễn phí vận chuyển</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="policy-item border rounded p-2 text-center">
+                                <i class="bi bi-arrow-repeat text-success"></i>
+                                <small class="d-block">Đổi trả trong 7 ngày</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="policy-item border rounded p-2 text-center">
+                                <i class="bi bi-shield-check text-info"></i>
+                                <small class="d-block">Bảo hành chính hãng</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="policy-item border rounded p-2 text-center">
+                                <i class="bi bi-credit-card text-warning"></i>
+                                <small class="d-block">Thanh toán an toàn</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sản phẩm tương tự -->
+    <section class="similar-products mb-5">
+        <h3 class="text-danger mb-4">
+            <i class="bi bi-grid"></i> Sản phẩm tương tự
+        </h3>
+        @Html.Partial("_SimilarProducts", ViewBag.SimilarProducts)
+    </section>
+
+    <!-- Top Deals -->
+    <section class="top-deals mb-5">
+        <h3 class="text-danger mb-4">
+            <i class="bi bi-fire"></i> Top Deals - Bán chạy nhất
+        </h3>
+        @Html.Partial("_TopDeals", ViewBag.TopDeals)
+    </section>
+</div>
+
+@section scripts {
+    <script>
+        function increaseQuantity() {
+            var input = document.getElementById('quantity');
+            var value = parseInt(input.value) || 1;
+            if (value < 999) {
+                input.value = value + 1;
+            }
+        }
+
+        function decreaseQuantity() {
+            var input = document.getElementById('quantity');
+            var value = parseInt(input.value) || 1;
+            if (value > 1) {
+                input.value = value - 1;
+            }
+        }
+
+        // Auto dismiss alert after 5 seconds
+        setTimeout(function() {
+            var alert = document.querySelector('.alert');
+            if (alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 5000);
+    </script>
+}
+
+<style>
+    .product-image-container {
+        position: sticky;
+        top: 20px;
+    }
+
+    .rating {
+        font-size: 1.2rem;
+    }
+
+    .quantity-selector .input-group button {
+        width: 40px;
+    }
+
+    .policy-item {
+        transition: all 0.3s;
+    }
+
+    .policy-item:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+    }
+
+    .policy-item i {
+        font-size: 1.5rem;
+    }
+
+    .breadcrumb {
+        background-color: #f8f9fa;
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+    }
+</style>

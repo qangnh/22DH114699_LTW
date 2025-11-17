@@ -1,0 +1,21 @@
+﻿@model _22DH114699_LTW.Models.Product
+@{
+    var hasVal = !string.IsNullOrEmpty(Model.ProductImage);
+    var imgPath = hasVal && (Model.ProductImage.StartsWith("~") || Model.ProductImage.StartsWith("/"))
+        ? Url.Content(Model.ProductImage)
+        : Url.Content("~/Images/" + (hasVal ? Model.ProductImage : "no-image.png"));
+}
+<div class="card h-100 border shadow-sm">
+    <div class="position-relative">
+        <img class="card-img-top" src="@imgPath" alt="@Model.ProductName" style="height:180px;object-fit:cover;" />
+    </div>
+    <div class="card-body p-2">
+        <h6 class="card-title text-truncate mb-2" title="@Model.ProductName" style="font-size:0.9rem;font-weight:600;">@Model.ProductName</h6>
+        <div class="text-primary fw-bold mb-1" style="font-size:1rem;">@String.Format("{0:N0} ?", Model.ProductPrice)</div>
+        <div class="small text-muted text-truncate mb-2">@Model.Category?.CategoryName</div>
+        <div class="small text-muted">?� b�n: 0</div>
+    </div>
+    <div class="card-footer bg-white border-0 p-2 pt-0">
+        <a class="btn btn-sm btn-outline-primary w-100" href="@Url.Action("ProductDetail", "Home", new { id = Model.ProductID })">Xem chi ti?t</a>
+    </div>
+</div>

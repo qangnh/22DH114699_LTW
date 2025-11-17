@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using WebGrease.Css.Ast;
-using PagedList.Mvc
+using PagedList.Mvc;
 
 namespace _22DH114699_LTW.Models.ViewModel
 {

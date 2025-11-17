@@ -1,0 +1,150 @@
+﻿@model IEnumerable<_22DH114699_LTW.Models.Order>
+
+@{
+    ViewBag.Title = "Đơn Hàng Của Tôi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <h2 class="mb-4"><i class="bi bi-box-seam"></i> Đơn Hàng Của Tôi</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var order in Model)
+            {
+                <div class="col-12 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <strong>Đơn hàng #@order.OrderID</strong>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <small>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="badge bg-warning">Đang xử lý</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Order items -->
+                                <div class="col-md-8">
+                                    <h6 class="mb-3">Sản phẩm:</h6>
+                                    @{
+                                        var displayedItems = order.OrderDetails.Take(3).ToList();
+                                        var remainingItems = order.OrderDetails.Count() - 3;
+                                    }
+                                    
+                                    @foreach (var item in displayedItems)
+                                    {
+                                        <div class="d-flex align-items-center mb-2 pb-2 border-bottom">
+                                            <div class="me-3">
+                                                @{
+                                                    string imgPath;
+                                                    if (string.IsNullOrEmpty(item.Product.ProductImage))
+                                                    {
+                                                        imgPath = Url.Content("~/Images/no-image.png");
+                                                    }
+                                                    else if (item.Product.ProductImage.StartsWith("http://") || item.Product.ProductImage.StartsWith("https://"))
+                                                    {
+                                                        imgPath = item.Product.ProductImage;
+                                                    }
+                                                    else if (item.Product.ProductImage.StartsWith("~") || item.Product.ProductImage.StartsWith("/"))
+                                                    {
+                                                        imgPath = Url.Content(item.Product.ProductImage);
+                                                    }
+                                                    else
+                                                    {
+                                                        imgPath = Url.Content("~/Images/" + item.Product.ProductImage);
+                                                    }
+                                                }
+                                                <img src="@imgPath" alt="@item.Product.ProductName" style="width: 60px; height: 60px; object-fit: cover;" class="rounded" />
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold">@item.Product.ProductName</div>
+                                                <small class="text-muted">Số lượng: @item.Quantity</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="text-primary fw-bold">@String.Format("{0:N0}", item.UnitPrice * item.Quantity) đ</div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @if (remainingItems > 0)
+                                    {
+                                        <div class="text-muted">
+                                            <small><i class="bi bi-three-dots"></i> và @remainingItems sản phẩm khác</small>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Order summary -->
+                                <div class="col-md-4">
+                                    <div class="bg-light p-3 rounded">
+                                        <h6 class="mb-3">Thông tin đơn hàng:</h6>
+                                        <div class="mb-2">
+                                            <small class="text-muted">Tổng tiền:</small>
+                                            <div class="text-danger fw-bold fs-5">@String.Format("{0:N0}", order.TotalAmount) đ</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted">Thanh toán:</small>
+                                            <div>@order.PaymentStatus</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <small class="text-muted">Địa chỉ:</small>
+                                            <div class="small">@(order.AddressDelivery.Length > 50 ? order.AddressDelivery.Substring(0, 50) + "..." : order.AddressDelivery)</div>
+                                        </div>
+                                        <a href="@Url.Action("Details", "Order", new { id = order.OrderID })" class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="bi bi-eye"></i> Xem Chi Tiết
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-cart-x text-muted" style="font-size: 80px;"></i>
+            <h4 class="mt-3 text-muted">Bạn chưa có đơn hàng nào</h4>
+            <p class="text-muted">Hãy khám phá các sản phẩm của chúng tôi và đặt hàng ngay!</p>
+            <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                <i class="bi bi-shop"></i> Mua Sắm Ngay
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <style>
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+}
