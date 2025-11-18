@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -9,14 +9,14 @@ using _22DH114699_LTW.Services;
 namespace _22DH114699_LTW.Controllers
 {
     /// <summary>
-    /// Controller qu?n l� ??n h�ng
+    /// Controller quản lý đơn hàng
     /// </summary>
     public class OrderController : Controller
     {
         private readonly MyStoreEntities db = new MyStoreEntities();
 
         /// <summary>
-        /// L?y d?ch v? gi? h�ng
+        /// Lấy dịch vụ giỏ hàng
         /// </summary>
         private CartService GetCartService()
         {
@@ -25,38 +25,38 @@ namespace _22DH114699_LTW.Controllers
 
         // GET: Order/Checkout
         /// <summary>
-        /// Hi?n th? trang thanh to�n
+        /// Hiển thị trang thanh toán
         /// </summary>
         public ActionResult Checkout()
         {
-            // Ki?m tra ??ng nh?p
+            // Kiểm tra đăng nhập
             if (Session["Username"] == null)
             {
-                TempData["Error"] = "Vui l�ng ??ng nh?p ?? ti?p t?c thanh to�n.";
+                TempData["Error"] = "Vui lòng đăng nhập để tiếp tục thanh toán.";
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action("Checkout", "Order") });
             }
 
             var cartService = GetCartService();
             var cart = cartService.GetCart();
 
-            // Ki?m tra gi? h�ng tr?ng
+            // Kiểm tra giỏ hàng trống
             if (!cart.Any())
             {
-                TempData["Error"] = "Gi? h�ng c?a b?n ?ang tr?ng.";
+                TempData["Error"] = "Giỏ hàng của bạn đang trống.";
                 return RedirectToAction("Index", "Cart");
             }
 
-            // L?y th�ng tin kh�ch h�ng
+            // Lấy thông tin khách hàng
             var username = Session["Username"].ToString();
             var customer = db.Customers.SingleOrDefault(c => c.Username == username);
 
             if (customer == null)
             {
-                TempData["Error"] = "Kh�ng t�m th?y th�ng tin kh�ch h�ng.";
+                TempData["Error"] = "Không tìm thấy thông tin khách hàng.";
                 return RedirectToAction("Index", "Cart");
             }
 
-            // Truy?n th�ng tin v�o ViewBag
+            // Truyền thông tin vào ViewBag
             ViewBag.Customer = customer;
             ViewBag.Cart = cart;
             ViewBag.TotalAmount = cartService.GetTotalAmount();
@@ -66,73 +66,67 @@ namespace _22DH114699_LTW.Controllers
 
         // POST: Order/Checkout
         /// <summary>
-        /// X? l� thanh to�n v� t?o ??n h�ng
+        /// Xử lý thanh toán đơn hàng
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Checkout(string addressDelivery, string paymentMethod, string shippingMethod)
+        public ActionResult Checkout(string shippingAddress, string paymentMethod, string shippingMethod)
         {
             try
             {
-                // Ki?m tra ??ng nh?p
+                // Kiểm tra đăng nhập
                 if (Session["Username"] == null)
                 {
-                    TempData["Error"] = "Vui l�ng ??ng nh?p ?? ti?p t?c.";
+                    TempData["Error"] = "Vui lòng đăng nhập để tiếp tục.";
                     return RedirectToAction("Login", "Account");
                 }
 
                 var cartService = GetCartService();
                 var cart = cartService.GetCart();
 
-                // Ki?m tra gi? h�ng tr?ng
+                // Ki?m tra gi? hàng tr?ng
                 if (!cart.Any())
                 {
-                    TempData["Error"] = "Gi? h�ng c?a b?n ?ang tr?ng.";
+                    TempData["Error"] = "Giỏ hàng của bạn đang trống.";
                     return RedirectToAction("Index", "Cart");
                 }
 
-                // Ki?m tra ??a ch? giao h�ng
-                if (string.IsNullOrWhiteSpace(addressDelivery))
+                // Kiểm tra địa chỉ giao hàng
+                if (string.IsNullOrWhiteSpace(shippingAddress))
                 {
-                    TempData["Error"] = "Vui l�ng nh?p ??a ch? giao h�ng.";
+                    TempData["Error"] = "Vui lòng nhập địa chỉ giao hàng.";
                     return RedirectToAction("Checkout");
                 }
 
-                // L?y th�ng tin kh�ch h�ng
+                // Lấy thông tin khách hàng
                 var username = Session["Username"].ToString();
                 var customer = db.Customers.SingleOrDefault(c => c.Username == username);
 
                 if (customer == null)
                 {
-                    TempData["Error"] = "Kh�ng t�m th?y th�ng tin kh�ch h�ng.";
+                    TempData["Error"] = "Không tìm thấy thông tin khách hàng.";
                     return RedirectToAction("Index", "Cart");
                 }
 
-                // T�nh ph� v?n chuy?n d?a tr�n ph??ng th?c giao h�ng
+                // Phí vận chuyển miễn phí cho tất cả phương thức
                 decimal shippingFee = 0;
-                if (shippingMethod == "Express")
-                {
-                    shippingFee = 30000; // Giao h�ng nhanh: 30,000?
-                }
-                else if (shippingMethod == "Standard")
-                {
-                    shippingFee = 15000; // Giao h�ng ti?t ki?m: 15,000?
-                }
 
-                // T?o ??n h�ng
+                // Tạo đơn hàng
                 var order = new Order
                 {
                     CustomerID = customer.CustomerID,
                     OrderDate = DateTime.Now,
                     TotalAmount = cartService.GetTotalAmount() + shippingFee,
-                    PaymentStatus = paymentMethod ?? "COD", // Cash On Delivery m?c ??nh
-                    AddressDelivery = addressDelivery
+                    PaymentStatus = paymentMethod ?? "COD", // Cash On Delivery mặc định
+                    ShippingAddress = shippingAddress,
+                    DeliveryMethod = shippingMethod,
+                    PaymentMethod = paymentMethod
                 };
 
                 db.Orders.Add(order);
                 db.SaveChanges();
 
-                // T?o chi ti?t ??n h�ng
+                // Tạo chi tiết đơn hàng
                 foreach (var item in cart)
                 {
                     var orderDetail = new OrderDetail
@@ -147,24 +141,24 @@ namespace _22DH114699_LTW.Controllers
 
                 db.SaveChanges();
 
-                // X�a gi? h�ng sau khi ??t h�ng th�nh c�ng
+                // Xóa gi? hàng sau khi ??t hàng thành công
                 cartService.ClearCart();
 
-                TempData["Success"] = "??t h�ng th�nh c�ng!";
-                TempData["ShippingMethod"] = shippingMethod == "Express" ? "Giao h�ng nhanh" : "Giao h�ng ti?t ki?m";
+                TempData["Success"] = "Đặt hàng thành công!";
+                TempData["ShippingMethod"] = shippingMethod == "Express" ? "Giao hàng nhanh" : "Giao hàng tiết kiệm";
                 TempData["ShippingFee"] = shippingFee;
                 return RedirectToAction("OrderSuccess", new { id = order.OrderID });
             }
             catch (Exception ex)
             {
-                TempData["Error"] = "C� l?i x?y ra khi ??t h�ng: " + ex.Message;
+                TempData["Error"] = "Có lỗi xảy ra khi đặt hàng: " + ex.Message;
                 return RedirectToAction("Checkout");
             }
         }
 
         // GET: Order/OrderSuccess
         /// <summary>
-        /// X�c nh?n ??n h�ng sau khi thanh to�n
+        /// Xác nhận đơn hàng sau khi thanh toán
         /// </summary>
         public ActionResult OrderSuccess(int? id)
         {
@@ -173,7 +167,7 @@ namespace _22DH114699_LTW.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Ki?m tra ??ng nh?p
+            // Kiểm tra đăng nhập
             if (Session["Username"] == null)
             {
                 return RedirectToAction("Login", "Account");
@@ -186,15 +180,15 @@ namespace _22DH114699_LTW.Controllers
 
             if (order == null)
             {
-                TempData["Error"] = "Kh�ng t�m th?y ??n h�ng.";
+                TempData["Error"] = "Không tìm thấy đơn hàng.";
                 return RedirectToAction("Index", "Home");
             }
 
-            // Ki?m tra xem ??n h�ng c� thu?c v? kh�ch h�ng hi?n t?i kh�ng
+            // Kiểm tra xem đơn hàng có thuộc về khách hàng hiện tại không
             var username = Session["Username"].ToString();
             if (order.Customer.Username != username)
             {
-                TempData["Error"] = "B?n kh�ng c� quy?n xem ??n h�ng n�y.";
+                TempData["Error"] = "Bạn không có quyền xem đơn hàng này.";
                 return RedirectToAction("Index", "Home");
             }
 
@@ -203,14 +197,14 @@ namespace _22DH114699_LTW.Controllers
 
         // GET: Order/MyOrder
         /// <summary>
-        /// Hi?n th? danh s�ch c�c ??n h�ng ?� ??t
+        /// Hiển thị danh sách các đơn hàng đã đặt
         /// </summary>
         public ActionResult MyOrder()
         {
-            // Ki?m tra ??ng nh?p
+            // Kiểm tra đăng nhập
             if (Session["Username"] == null)
             {
-                TempData["Error"] = "Vui l�ng ??ng nh?p ?? xem ??n h�ng c?a b?n.";
+                TempData["Error"] = "Vui lòng đăng nhập để xem đơn hàng của bạn.";
                 return RedirectToAction("Login", "Account", new { returnUrl = Url.Action("MyOrder", "Order") });
             }
 
@@ -219,11 +213,11 @@ namespace _22DH114699_LTW.Controllers
 
             if (customer == null)
             {
-                TempData["Error"] = "Kh�ng t�m th?y th�ng tin kh�ch h�ng.";
+                TempData["Error"] = "Không tìm thấy thông tin khách hàng.";
                 return RedirectToAction("Index", "Home");
             }
 
-            // L?y danh s�ch ??n h�ng c?a kh�ch h�ng, s?p x?p theo ng�y m?i nh?t
+            // Lấy danh sách đơn hàng của khách hàng, sắp xếp theo ngày mới nhất
             var orders = db.Orders
                 .Include(o => o.OrderDetails.Select(od => od.Product))
                 .Where(o => o.CustomerID == customer.CustomerID)
@@ -235,17 +229,17 @@ namespace _22DH114699_LTW.Controllers
 
         // GET: Order/Details/5
         /// <summary>
-        /// Hi?n th? chi ti?t ??n h�ng
+        /// Hiển thị chi tiết đơn hàng
         /// </summary>
         public ActionResult Details(int? id)
         {
             if (id == null)
             {
-                TempData["Error"] = "Kh�ng t�m th?y ??n h�ng.";
+                TempData["Error"] = "Không tìm thấy đơn hàng.";
                 return RedirectToAction("MyOrder");
             }
 
-            // Ki?m tra ??ng nh?p
+            // Kiểm tra đăng nhập
             if (Session["Username"] == null)
             {
                 return RedirectToAction("Login", "Account");
@@ -258,15 +252,15 @@ namespace _22DH114699_LTW.Controllers
 
             if (order == null)
             {
-                TempData["Error"] = "Kh�ng t�m th?y ??n h�ng.";
+                TempData["Error"] = "Không tìm thấy đơn hàng.";
                 return RedirectToAction("MyOrder");
             }
 
-            // Ki?m tra xem ??n h�ng c� thu?c v? kh�ch h�ng hi?n t?i kh�ng
+            // Kiểm tra xem đơn hàng có thuộc về khách hàng hiện tại không
             var username = Session["Username"].ToString();
             if (order.Customer.Username != username)
             {
-                TempData["Error"] = "B?n kh�ng c� quy?n xem ??n h�ng n�y.";
+                TempData["Error"] = "Bạn không có quyền xem đơn hàng này.";
                 return RedirectToAction("MyOrder");
             }
 

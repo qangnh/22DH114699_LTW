@@ -80,7 +80,7 @@
                     <h5 class="mb-0"><i class="bi bi-truck"></i> Thông Tin Giao Hàng</h5>
                 </div>
                 <div class="card-body">
-                    @using (Html.BeginForm("Checkout", "Order", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                    @using (Html.BeginForm("Checkout", "Order", FormMethod.Post, new { @id = "checkoutForm", @class = "needs-validation", novalidate = "novalidate" }))
                     {
                         @Html.AntiForgeryToken()
 
@@ -100,8 +100,13 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="addressDelivery" class="form-label">Địa chỉ giao hàng <span class="text-danger">*</span></label>
-                            <textarea id="addressDelivery" name="addressDelivery" class="form-control" rows="3" required placeholder="Nhập địa chỉ giao hàng đầy đủ...">@customer.CustomerAddress</textarea>
+                            <label for="shippingAddress" class="form-label">
+                                Địa chỉ giao hàng <span class="text-danger">*</span>
+                            </label>
+                            <textarea id="shippingAddress" name="shippingAddress" class="form-control" rows="3" required placeholder="Nhập địa chỉ giao hàng...">@customer.CustomerAddress</textarea>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Bạn có thể chỉnh sửa địa chỉ giao hàng trực tiếp tại đây
+                            </div>
                             <div class="invalid-feedback">
                                 Vui lòng nhập địa chỉ giao hàng.
                             </div>
@@ -111,26 +116,26 @@
                             <label class="form-label">Phương thức giao hàng <span class="text-danger">*</span></label>
                             <div class="list-group">
                                 <label class="list-group-item d-flex align-items-center">
-                                    <input class="form-check-input me-3 shipping-method" type="radio" name="shippingMethod" value="Express" data-fee="30000" checked>
+                                    <input class="form-check-input me-3 shipping-method" type="radio" name="shippingMethod" value="Express" data-fee="0" checked>
                                     <div class="flex-grow-1">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <strong><i class="bi bi-lightning-charge text-warning"></i> Giao hàng nhanh</strong>
                                                 <div class="text-muted small">Nhận hàng trong 1-2 ngày</div>
                                             </div>
-                                            <span class="badge bg-warning text-dark">30,000 đ</span>
+                                            <span class="badge bg-success">Miễn phí</span>
                                         </div>
                                     </div>
                                 </label>
                                 <label class="list-group-item d-flex align-items-center">
-                                    <input class="form-check-input me-3 shipping-method" type="radio" name="shippingMethod" value="Standard" data-fee="15000">
+                                    <input class="form-check-input me-3 shipping-method" type="radio" name="shippingMethod" value="Standard" data-fee="0">
                                     <div class="flex-grow-1">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <strong><i class="bi bi-box-seam text-success"></i> Giao hàng tiết kiệm</strong>
                                                 <div class="text-muted small">Nhận hàng trong 3-5 ngày</div>
                                             </div>
-                                            <span class="badge bg-success">15,000 đ</span>
+                                            <span class="badge bg-success">Miễn phí</span>
                                         </div>
                                     </div>
                                 </label>
@@ -139,16 +144,34 @@
 
                         <div class="mb-3">
                             <label class="form-label">Phương thức thanh toán</label>
-                            <select name="paymentMethod" class="form-select">
+                            <select name="paymentMethod" id="paymentMethod" class="form-select">
                                 <option value="COD" selected>Thanh toán khi nhận hàng (COD)</option>
-                                <option value="Banking">Chuyển khoản ngân hàng</option>
+                                <option value="PayPal">PayPal</option>
                                 <option value="Card">Thẻ tín dụng/ghi nợ</option>
                             </select>
                         </div>
 
-                        <div class="d-flex gap-2">
+                        <!-- COD Button -->
+                        <div id="codButton" class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-check-circle"></i> Xác Nhận Đặt Hàng
+                            </button>
+                            <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary btn-lg">
+                                <i class="bi bi-arrow-left"></i> Quay Lại Giỏ Hàng
+                            </a>
+                        </div>
+                    }
+
+                    <!-- PayPal Form (Hidden by default) -->
+                    @using (Html.BeginForm("CreatePayment", "PayPal", FormMethod.Post, new { @id = "paypalForm", @style = "display:none;" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="paypalShippingAddress" name="shippingAddress" />
+                        <input type="hidden" id="paypalShippingMethod" name="shippingMethod" />
+                        
+                        <div id="paypalButton" class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-paypal"></i> Thanh Toán Qua PayPal
                             </button>
                             <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary btn-lg">
                                 <i class="bi bi-arrow-left"></i> Quay Lại Giỏ Hàng
@@ -172,16 +195,23 @@
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Phí vận chuyển:</span>
-                        <span id="shippingFee" class="text-warning">30,000 đ</span>
+                        <span id="shippingFee" class="text-success">Miễn phí</span>
                     </div>
                     <hr />
                     <div class="d-flex justify-content-between mb-3">
                         <strong>Tổng cộng:</strong>
-                        <strong class="text-danger fs-4" id="totalAmount">@String.Format("{0:N0}", totalAmount + 30000) đ</strong>
+                        <strong class="text-danger fs-4" id="totalAmount">@String.Format("{0:N0}", totalAmount) đ</strong>
                     </div>
 
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i> Vui lòng kiểm tra kỹ thông tin trước khi đặt hàng
+                    </div>
+
+                    <!-- PayPal Info -->
+                    <div id="paypalInfo" class="alert alert-warning" style="display:none;">
+                        <i class="bi bi-paypal"></i> <strong>PayPal</strong><br/>
+                        <small>Bạn sẽ được chuyển đến trang PayPal để hoàn tất thanh toán.</small><br/>
+                        <small class="text-muted">Tỷ giá: ~24,000 VND = 1 USD</small>
                     </div>
                 </div>
             </div>
@@ -191,35 +221,85 @@
 
 @section Scripts {
     <script>
-        // Bootstrap validation
-        (function () {
-            'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-        })()
+        document.addEventListener('DOMContentLoaded', function () {
+            // Bootstrap validation
+            (function () {
+                'use strict'
+                var forms = document.querySelectorAll('.needs-validation')
+                Array.prototype.slice.call(forms)
+                    .forEach(function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (!form.checkValidity()) {
+                                event.preventDefault()
+                                event.stopPropagation()
+                            }
+                            form.classList.add('was-validated')
+                        }, false)
+                    })
+            })()
 
-        // Cập nhật phí vận chuyển và tổng tiền
-        var subtotalAmount = @totalAmount;
-        
-        document.querySelectorAll('.shipping-method').forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                var shippingFee = parseInt(this.getAttribute('data-fee'));
-                var totalAmount = subtotalAmount + shippingFee;
-                
-                // Cập nhật hiển thị phí vận chuyển
-                document.getElementById('shippingFee').textContent = shippingFee.toLocaleString('vi-VN') + ' đ';
-                
-                // Cập nhật hiển thị tổng tiền
-                document.getElementById('totalAmount').textContent = totalAmount.toLocaleString('vi-VN') + ' đ';
+            // Cập nhật phí vận chuyển và tổng tiền
+            var subtotalAmount = @(totalAmount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+
+            document.querySelectorAll('.shipping-method').forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    var shippingFee = parseInt(this.getAttribute('data-fee'));
+                    var totalAmount = subtotalAmount + shippingFee;
+
+                    // Cập nhật hiển thị phí vận chuyển
+                    if (shippingFee === 0) {
+                        document.getElementById('shippingFee').textContent = 'Miễn phí';
+                        document.getElementById('shippingFee').className = 'text-success';
+                    } else {
+                        document.getElementById('shippingFee').textContent = shippingFee.toLocaleString('vi-VN') + ' đ';
+                        document.getElementById('shippingFee').className = 'text-warning';
+                    }
+
+                    // Cập nhật hiển thị tổng tiền
+                    document.getElementById('totalAmount').textContent = totalAmount.toLocaleString('vi-VN') + ' đ';
+                });
+            });
+
+            // Xử lý thay đổi phương thức thanh toán
+            var paymentMethodSelect = document.getElementById('paymentMethod');
+            var checkoutForm = document.getElementById('checkoutForm');
+            var paypalForm = document.getElementById('paypalForm');
+            var codButton = document.getElementById('codButton');
+            var paypalButton = document.getElementById('paypalButton');
+            var paypalInfo = document.getElementById('paypalInfo');
+
+            paymentMethodSelect.addEventListener('change', function() {
+                if (this.value === 'PayPal') {
+                    // Hiển thị form PayPal
+                    checkoutForm.style.display = 'block';
+                    paypalForm.style.display = 'block';
+                    codButton.style.display = 'none';
+                    paypalButton.style.display = 'flex';
+                    paypalInfo.style.display = 'block';
+                } else {
+                    // Hiển thị form COD
+                    checkoutForm.style.display = 'block';
+                    paypalForm.style.display = 'none';
+                    codButton.style.display = 'flex';
+                    paypalButton.style.display = 'none';
+                    paypalInfo.style.display = 'none';
+                }
+            });
+
+            // Xử lý submit PayPal form
+            document.getElementById('paypalForm').addEventListener('submit', function(e) {
+                var shippingAddress = document.getElementById('shippingAddress').value;
+                var shippingMethod = document.querySelector('input[name="shippingMethod"]:checked').value;
+
+                if (!shippingAddress) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập địa chỉ giao hàng');
+                    return false;
+                }
+
+                // Copy giá trị sang PayPal form
+                document.getElementById('paypalShippingAddress').value = shippingAddress;
+                document.getElementById('paypalShippingMethod').value = shippingMethod;
             });
         });
     </script>

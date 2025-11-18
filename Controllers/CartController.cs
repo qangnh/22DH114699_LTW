@@ -100,7 +100,7 @@ namespace _22DH114699_LTW.Controllers
                 cartService.AddItem(product, quantity);
 
                 TempData["Success"] = $"?ã thêm {quantity} s?n ph?m '{product.ProductName}' vào gi? hàng.";
-                
+
                 // Ki?m tra n?u có tham s? returnUrl
                 var returnUrl = Request.UrlReferrer?.ToString();
                 if (!string.IsNullOrEmpty(returnUrl) && returnUrl.Contains("/ProductDetail/"))
