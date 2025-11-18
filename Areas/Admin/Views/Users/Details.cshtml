@@ -1,16 +1,24 @@
 ﻿@model _22DH114699_LTW.Models.User
 
 @{
-    ViewBag.Title = "Details";
+    ViewBag.Title = "User Details";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Details</h2>
+<h2>User Details</h2>
 
 <div>
-    <h4>User</h4>
+    <h4>User Information</h4>
     <hr />
     <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Username)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Username)
+        </dd>
+
         <dt>
             @Html.DisplayNameFor(model => model.Password)
         </dt>
@@ -29,7 +37,38 @@
 
     </dl>
 </div>
+
+@if (Model.Customers != null && Model.Customers.Any())
+{
+    <div>
+        <h4>Customer Information</h4>
+        <hr />
+        @foreach (var customer in Model.Customers)
+        {
+            <dl class="dl-horizontal">
+                <dt>Customer Name</dt>
+                <dd>@customer.CustomerName</dd>
+
+                <dt>Customer Email</dt>
+                <dd>@customer.CustomerEmail</dd>
+
+                <dt>Customer Phone</dt>
+                <dd>@customer.CustomerPhone</dd>
+
+                <dt>Customer Address</dt>
+                <dd>@customer.CustomerAddress</dd>
+            </dl>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <p>No customer information linked to this user account.</p>
+    </div>
+}
+
 <p>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.Username }) |
-    @Html.ActionLink("Back to List", "Index")
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Username }, new { @class = "btn btn-warning" }) |
+    @Html.ActionLink("Back to List", "Index", null, new { @class = "btn btn-default" })
 </p>

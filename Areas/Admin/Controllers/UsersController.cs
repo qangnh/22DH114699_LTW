@@ -17,7 +17,8 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
         // GET: Admin/Users
         public ActionResult Index()
         {
-            return View(db.Users.ToList());
+            var users = db.Users.Include(u => u.Customers).ToList();
+            return View(users);
         }
 
         // GET: Admin/Users/Details/5
@@ -27,7 +28,7 @@ namespace _22DH114699_LTW.Areas.Admin.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            User user = db.Users.Find(id);
+            User user = db.Users.Include(u => u.Customers).FirstOrDefault(u => u.Username == id);
             if (user == null)
             {
                 return HttpNotFound();
